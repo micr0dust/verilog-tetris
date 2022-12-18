@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<head>
+    <title>eraseBlock</title>
+</head>
+
+<body>
+    <script>
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++)
+                document.write(`if (shapes[blockType][rotate][${i}][${j}] && (blockX + ${j}) < 8 && ((TOP - blockY) + ${i}) < 8 && ((TOP - blockY) + ${i}) >= 0) map[((TOP - blockY) + ${i})][blockX + ${j}] = 0;<br>`);
+            //document.write("<br>");
+        }
+    </script>
+</body>
+
+</html>

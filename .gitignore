@@ -1,0 +1,9 @@
+db
+incremental_db
+output_files
+simulation
+t_tetris.v.bak
+tetris_nativelink_simulation.rpt
+tetris.qpf
+tetris.qsf
+tetris.v.bak

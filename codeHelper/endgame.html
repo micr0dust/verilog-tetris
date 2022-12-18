@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<head>
+    <title>endgame</title>
+</head>
+
+<body>
+    <script>
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++)
+                document.write(`(((shapes[blockType][nextRotate][${i}][${j}] && (nextBlockX + ${j}) < 8 && ((TOP - nextBlockY) + ${i}) < 8 && ((TOP - nextBlockY) + ${i}) >= 0)) && (newBlock && map[((TOP - nextBlockY) + i) + 1][(nextBlockX + j)])) ||<br>`);
+            //document.write("<br>");
+        }
+    </script>
+</body>
+
+</html>
