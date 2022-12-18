@@ -1,1 +1,3 @@
-"# verilog-tetris" 
+# Verilog Tetris
+
+- Still developing...
