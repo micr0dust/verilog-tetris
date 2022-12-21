@@ -3,11 +3,11 @@
 module tetris(
 	output reg [7:0] map0,map1,map2,map3,map4,map5,map6,map7,
     output reg [7:0] debug1,debugger,
-	input CLK, CLR, rightAction, leftAction, rotateAction
+	input CLK, CLR, right, left, rotating
 );
     // const
     reg [7:0] shapes[6:0][3:0][3:0];
-    reg [3:0] shapesH[6:0];
+    reg [2:0] shapesH[6:0][3:0];
     parameter[4:0] TOP = 17, BUTTOM = 10;
 
 	initial begin
@@ -46,9 +46,9 @@ module tetris(
     reg[2:0] controller;
 
     // action
-    // reg rightAction;
-    // reg leftAction;
-    // reg rotateAction;
+    reg rightAction;
+    reg leftAction;
+    reg rotateAction;
 
     //random
     reg [7:0] random;
@@ -84,6 +84,9 @@ module tetris(
 
     initial 
         begin
+            rightAction <= 0;
+            leftAction <= 0;
+            rotateAction <= 0;
             controller <= 0;
             scene <= 0;
             random <= 0;
@@ -101,18 +104,19 @@ module tetris(
     always@(posedge CLK)
     begin
         if(controller==4)
-            controller <= 1;
+            controller <= 0;
         else controller <= controller + 1;
     end
 
     // action
-    // always@(posedge CLK)
-    // if(controller==0)
-    // begin
-    //     rightAction <= right;
-    //     leftAction <= left;
-    //     rotateAction <= rotating;
-    // end
+    always@(posedge CLK)
+    if(controller==0)
+    begin
+        debugger <= right;
+        rightAction <= right;
+        leftAction <= left;
+        rotateAction <= rotating;
+    end
 
     // random
     always@(posedge CLK)
@@ -126,7 +130,7 @@ module tetris(
     if(controller==1)
     begin
         if (rotateAction) begin
-            tryRotate <= rotate%2+1;
+            tryRotate <= (tryRotate&1)+1;
             tryBlockX <= blockX;
         end
         else begin
@@ -144,18 +148,16 @@ module tetris(
     always@(posedge CLK)
     if(controller==2)
     begin
-        if(((tryBlockX+shapesH[blockType][tryRotate%2+1]-1) > 7) ||
+        if(((tryBlockX+shapesH[blockType][(tryRotate&1)+1]-1) > 7) ||
             (map[(TOP-blockY) + 0] & (shapes[blockType][tryRotate][0] >> tryBlockX)) ||
             (map[(TOP-blockY) + 1] & (shapes[blockType][tryRotate][1] >> tryBlockX)) ||
             (map[(TOP-blockY) + 2] & (shapes[blockType][tryRotate][2] >> tryBlockX)) ||
             (map[(TOP-blockY) + 3] & (shapes[blockType][tryRotate][3] >> tryBlockX)))
         begin
-            debugger <= 0;
             nextRotate <= rotate;
             nextBlockX <= blockX;
         end
         else begin
-            debugger <= 1;
             nextRotate <= tryRotate;
             nextBlockX <= tryBlockX;
         end
@@ -278,6 +280,8 @@ module tetris(
                             map[i] <= 0;
             end
             else nextScene <= 3;
+            for (i = 0; i<8; i=i+1)
+                display[i] <= map[i];
         end
     endcase
 

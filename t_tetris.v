@@ -16,14 +16,15 @@ module t_tetris;
 		#40 t_right = 1;
 		#40 t_right = 0;
 		times=0;
-		repeat(100) #10
+		repeat(100) #40
 			begin
 				times=times+1;
-				t_right = 1;
-				//if(times==10) t_left = 1;
-				//if(times==12) t_left = 0;
-				//if(times==15) t_right = 1;
-				//if(times==22) t_right = 0;
+				if(times==1) t_right = 1;
+				if(times==10) t_right = 0;
+				if(times==19) t_right = 1;
+				if(times==20) t_right = 0;
+				if(times==50) t_right = 1;
+				if(times==53) t_right = 0;
 				//if(times==23) t_right = 1;
 				//if(times==28) t_right = 0;
 				$display("%d| scene=%d debugger=%d(%b)\n|%b|\n|%b|\n|%b|\n|%b|\n|%b|\n|%b|\n|%b|\n|%b|\n|TTTTTTTT|\n", times,t_debug1,debugger,debugger,map0,map1,map2,map3,map4,map5,map6,map7);
