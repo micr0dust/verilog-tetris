@@ -1,9 +1,10 @@
 `timescale 1ns / 1ps
 
 module tetris(
-	output reg [7:0] map0,map1,map2,map3,map4,map5,map6,map7,
-    output reg [7:0] debug1,debugger,
-	input CLK, CLR, right, left, rotating
+	output reg [7:0] DATA_R, DATA_G, DATA_B ,
+    output reg [3:0] COMM,
+    output reg debugger,
+	input CLK, CLR, right, left, rotating, down
 );
     // const
     reg [7:0] shapes[6:0][3:0][3:0];
@@ -43,19 +44,26 @@ module tetris(
     */
 
     // controller
-    reg[2:0] controller;
+    reg[4:0] controller;
 
     // action
     reg rightAction;
     reg leftAction;
     reg rotateAction;
+    reg downAction;
+    reg rightNext;
+    reg leftNext;
+    reg rotateNext;
+    reg downNext;
+    reg [4:0] delay;
 
     //random
     reg [7:0] random;
 
     // timer
     Timer2 T2(CLK,timer2);
-    Timer10 T10(CLK,timer10);
+    Timer25 T25(CLK,timer25);
+    TimerRefresh TFR(CLK,refresh);
 
     // tmp use
     integer i,j,k;
@@ -78,12 +86,23 @@ module tetris(
     reg [1:0] rotate;
     reg [5:0] blockX, blockY;
     reg [2:0] blockType;
+    reg [4:0] animeCount;
 
     // next blockY
     reg [5:0] nextBlockY;
 
     initial 
         begin
+            delay <= 0;
+            rightNext <= 0;
+            leftNext <= 0;
+            rotateNext <= 0;
+            downNext <= 0;
+            debugger <= 0;
+            COMM <= 4'b1000;
+            DATA_R <= 8'b11111111;
+            DATA_G <= 8'b11111111;
+            DATA_B <= 8'b11111111;
             rightAction <= 0;
             leftAction <= 0;
             rotateAction <= 0;
@@ -95,57 +114,59 @@ module tetris(
             nextBlockY <= 0;
             rotate <= 0;
             nextScene <= 0;
+            animeCount <= 0;
             for (i=0; i<8; i=i+1)
                 for (j=0; j<8; j=j+1)
                     map[i][j] <= 8'b0;
         end
 
     // controller
-    always@(posedge CLK)
+    always@(posedge refresh)
     begin
-        if(controller==4)
+        if(controller==13)
             controller <= 0;
         else controller <= controller + 1;
     end
 
     // action
-    always@(posedge CLK)
+    always@(posedge refresh)
     if(controller==0)
     begin
-        debugger <= right;
-        rightAction <= right;
-        leftAction <= left;
-        rotateAction <= rotating;
+        if(!delay) begin
+            rightNext <= right;
+            leftNext <= left;
+            rotateNext <= rotating;
+            downNext <= down;
+            delay <= delay + 1;
+        end
+        else delay <= delay + 1;
     end
 
     // random
-    always@(posedge CLK)
+    always@(posedge refresh)
     begin
-        if(random==127) random <= 7'b0;
-        else random <= random+1;
+        random <= random+1;
     end
 
     // simulate next action
-    always@(posedge CLK)
+    always@(posedge refresh)
     if(controller==1)
     begin
-        if (rotateAction) begin
-            tryRotate <= (tryRotate&1)+1;
-            tryBlockX <= blockX;
-        end
-        else begin
+        if(!rotateAction && rotateNext)
+            tryRotate <= (rotate+1)%4;
+        else
             tryRotate <= rotate;
-            if (leftAction && blockX > 0)
-                tryBlockX <= blockX-1;
-            else if (rightAction)
-                tryBlockX <= blockX+1;
-            else
-                tryBlockX <= blockX;
-        end
+
+        if (!leftAction && leftNext && blockX > 0)
+            tryBlockX <= blockX-1;
+        else if (!rightAction && rightNext)
+            tryBlockX <= blockX+1;
+        else
+            tryBlockX <= blockX;
     end
 
     // valid action?
-    always@(posedge CLK)
+    always@(posedge refresh)
     if(controller==2)
     begin
         if(((tryBlockX+shapesH[blockType][(tryRotate&1)+1]-1) > 7) ||
@@ -164,46 +185,52 @@ module tetris(
     end
 
     // final check
-    always@(posedge CLK)
+    always@(posedge refresh)
     if(CLR)begin
         for (i=0; i<8; i=i+1)
-            map[i][j] <= 8'b0;
+            map[i] <= 0;
         for (i = 0; i<8; i=i+1)
-            display[i] <= 8'b0;
-        nextScene <= 0;
+            display[i] <= 0;
+        nextScene <= 1;
     end
     else if(controller==3)
     case (scene)
         0: begin
-            for(i = 7; i >= 0; i = i-1)
-                if(i > 0)
-                    map[i] <= map[i-1];
+            animeCount <= animeCount + 1;
+            if(animeCount==0)
+            begin
+                for(i = 7; i >= 0; i = i-1)
+                    if(i > 0)
+                        map[i] <= map[i-1];
+                    else
+                        map[i] <= 8'b00000000;
+                for (i = 0; i<8; i=i+1)
+                        display[i] <= map[i];
+                if(map[0]||map[1]||map[2]||map[3]||map[4]||map[5]||map[6]||map[7])
+                    nextScene <= 0;
                 else
-                    map[i] <= 8'b00000000;
-            for (i = 0; i<8; i=i+1)
-                    display[i] <= map[i];
-            if(map[0]||map[1]||map[2]||map[3]||map[4]||map[5]||map[6]||map[7])
-                nextScene <= 0;
-            else
-                nextScene <= 1;
+                    nextScene <= 1;
+            end
         end
         1: begin
             if(rightAction||leftAction||rotateAction)
                 nextScene <= 3;
         end
         3: begin
-            //blockType <= random % 7;
-            blockType <= 1;
+            blockType <= random % 7;
+            //blockType <= 1;
             rotate <= random % 4;
             blockX <= random % 5;
-            nextBlockY <= (TOP + shapesH[1][random % 4]+1);
-            //nextBlockY <= (TOP + shapesH[random % 7][random % 4]+1);
+            //nextBlockY <= (TOP + shapesH[1][random % 4]+1);
+            blockY <= (TOP + shapesH[random % 7][random % 4]+1);
             nextScene <= 4;
         end
         4: begin // falling
-            nextBlockY <= blockY - 1;
+            blockY <= nextBlockY;
             blockX <= nextBlockX;
             rotate <= nextRotate;
+            // blockX <= blockX;
+            // rotate <= rotate;
             // endGame 
             if(map[0])
             begin
@@ -232,7 +259,10 @@ module tetris(
                 display[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
                 display[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
                 display[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
-                nextScene <= 5;
+                if(blockY >= TOP)
+                    nextScene <= 0;
+                else
+                    nextScene <= 5;
             end
             else
             begin
@@ -247,15 +277,7 @@ module tetris(
             end
         end
         5: begin //check and erase
-            if(map[(TOP - blockY) + shapesH[blockType][rotate]-1] == 8'b11111111) begin
-                for(i = 7; i >= 0; i = i-1)
-                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-1)
-                        if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            end
-            else if(shapesH[blockType][rotate] >= 2 && map[(TOP - blockY) + shapesH[blockType][rotate]-2] == 8'b11111111) begin
+            if(map[(TOP - blockY) + shapesH[blockType][rotate]-2] == 8'b11111111) begin
                 for(i = 7; i >= 0; i = i-1)
                     if(i <= (TOP - blockY) + shapesH[blockType][rotate]-2)
                         if(i > 0)
@@ -263,7 +285,7 @@ module tetris(
                         else
                             map[i] <= 0;
             end
-            else if(shapesH[blockType][rotate] >= 3 && map[(TOP - blockY) + shapesH[blockType][rotate]-3] == 8'b11111111) begin
+            else if(shapesH[blockType][rotate] >= 2 && map[(TOP - blockY) + shapesH[blockType][rotate]-3] == 8'b11111111) begin
                 for(i = 7; i >= 0; i = i-1)
                     if(i <= (TOP - blockY) + shapesH[blockType][rotate]-3)
                         if(i > 0)
@@ -271,9 +293,17 @@ module tetris(
                         else
                             map[i] <= 0;
             end
-            else if(shapesH[blockType][rotate] >= 4 && map[(TOP - blockY) + shapesH[blockType][rotate]-4] == 8'b11111111) begin
+            else if(shapesH[blockType][rotate] >= 3 && map[(TOP - blockY) + shapesH[blockType][rotate]-4] == 8'b11111111) begin
                 for(i = 7; i >= 0; i = i-1)
                     if(i <= (TOP - blockY) + shapesH[blockType][rotate]-4)
+                        if(i > 0)
+                            map[i] <= map[i-1];
+                        else
+                            map[i] <= 0;
+            end
+            else if(shapesH[blockType][rotate] >= 4 && map[(TOP - blockY) + shapesH[blockType][rotate]-5] == 8'b11111111) begin
+                for(i = 7; i >= 0; i = i-1)
+                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-5)
                         if(i > 0)
                             map[i] <= map[i-1];
                         else
@@ -285,50 +315,83 @@ module tetris(
         end
     endcase
 
+    //  round
+    always@(posedge timer2)
+    begin
+        nextBlockY <= blockY - 1;
+        scene <= nextScene;
+    end
+
     // display
-    always@(posedge CLK)
+    always@(posedge refresh)
     if(controller==4)
     begin
-        blockY <= nextBlockY;
-        scene <= nextScene;
-        debug1 <= scene;
-        map0 <= display[0];
-        map1 <= display[1];
-        map2 <= display[2];
-        map3 <= display[3];
-        map4 <= display[4];
-        map5 <= display[5];
-        map6 <= display[6];
-        map7 <= display[7];
+        rightAction <= rightNext;
+        leftAction <= leftNext;
+        rotateAction <= rotateNext;
+        downAction <= downNext;
+        COMM <= 4'b1111;
     end
+    else if(controller>=5 && controller<13)
+    begin
+        DATA_R <= {
+            ~display[7][controller-5],
+            ~display[6][controller-5],
+            ~display[5][controller-5],
+            ~display[4][controller-5],
+            ~display[3][controller-5],
+            ~display[2][controller-5],
+            ~display[1][controller-5],
+            ~display[0][controller-5],
+        };
+        COMM <= {COMM[3] ,COMM[2:0]+ 1'b1};
+        debugger <= 1;
+    end
+    else if(controller==13)
+        COMM <= 4'b0000;
     
         
 endmodule
 
 // 0.5s , 2hz
-module Timer2(input CLK, output reg CLK2);
+module Timer2(input CLK, output reg CLKout);
 	reg [24:0] timer=0;
 	always @(posedge CLK)
 	begin
-		if(timer > 12500000)
+		if(timer > 25000000/2)
 		begin
 			timer <= 0;
-			CLK2 <= ~CLK2;
+			CLKout <= ~CLKout;
 		end
 		else
 			timer <= timer + 1;
 	end
 endmodule
 
-// 0.01s , 10hz
-module Timer10(input CLK, output reg CLK10);
+// 0.04s, faster timer
+module Timer25(input CLK, output reg CLKout);
 	reg [24:0] timer=0;
 	always @(posedge CLK)
 	begin
-		if(timer > 2500000)
+		if(timer > 25000000/250)
 		begin
 			timer <= 0;
-			CLK10 <= ~CLK10;
+			CLKout <= ~CLKout;
+		end
+		else
+			timer <= timer + 1;
+	end
+endmodule
+
+// refresh
+module TimerRefresh(input CLK, output reg CLKout);
+	reg [24:0] timer=0;
+	always @(posedge CLK)
+	begin
+		if(timer > 25000000/5000)
+		begin
+			timer <= 0;
+			CLKout <= ~CLKout;
 		end
 		else
 			timer <= timer + 1;
