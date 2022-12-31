@@ -7,6 +7,7 @@ A Tetris game made with Verilog.
 ## Display
 
 All result are desplay on 8x8 LED
+
 ![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/LED8x8.jpg?raw=true "video")]
 
 ## Basic Features
