@@ -1,6 +1,6 @@
 # Verilog Tetris
 
-A Tetris game made with Verilog.
+A Tetris game developed using Verilog.
 
 [![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/thumbnails.jpg?raw=true "video")](https://www.youtube.com/watch?v=JI98538qdTQ)
 
@@ -69,7 +69,8 @@ DATA_R[5] | PIN_77 | CR6 |
 DATA_R[6] | PIN_79 | CR7 |
 DATA_R[7] | PIN_80 | CR8 |
 
-# Compilation Info
+## Compilation Info
+
 | | |
 |----|----|
 Quartus II 64-Bit Version | 13.1.0 Build 162 10/23/2013 SJ Web Edition
