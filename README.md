@@ -68,3 +68,17 @@ DATA_R[4] | PIN_76 | CR5 |
 DATA_R[5] | PIN_77 | CR6 |
 DATA_R[6] | PIN_79 | CR7 |
 DATA_R[7] | PIN_80 | CR8 |
+
+# Compilation Info
+| | |
+|----|----|
+Quartus II 64-Bit Version | 13.1.0 Build 162 10/23/2013 SJ Web Edition
+Revision Name | tetris
+Top-level Entity Name | tetris
+Family | Cyclone III
+Device | EP3C10E144C8
+Total logic elements | 1,398 / 10,320 ( 14 % )
+Total combinational functions | 1,367 / 10,320 ( 13 % )
+Dedicated logic registers | 295 / 10,320 ( 3 % )
+Total registers | 295
+Total pins | 37 / 95 ( 39 % )
