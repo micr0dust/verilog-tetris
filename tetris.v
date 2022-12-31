@@ -45,6 +45,8 @@ module tetris(
 
     // controller
     reg[4:0] controller;
+    reg nextRound;
+    reg round;
 
     // action
     reg rightAction;
@@ -55,7 +57,7 @@ module tetris(
     reg leftNext;
     reg rotateNext;
     reg downNext;
-    reg [4:0] delay;
+    reg [3:0] delay;
 
     //random
     reg [7:0] random;
@@ -93,6 +95,8 @@ module tetris(
 
     initial 
         begin
+            round <= 0;
+            nextRound <= 0;
             delay <= 0;
             rightNext <= 0;
             leftNext <= 0;
@@ -277,38 +281,52 @@ module tetris(
             end
         end
         5: begin //check and erase
-            if(map[(TOP - blockY) + shapesH[blockType][rotate]-2] == 8'b11111111) begin
-                for(i = 7; i >= 0; i = i-1)
-                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-2)
-                        if(i > 0)
+            if(map[7] == 8'b11111111)
+                for(i = 7; i > 0; i = i-1)
+                    if(i > 0)
                             map[i] <= map[i-1];
                         else
                             map[i] <= 0;
-            end
-            else if(shapesH[blockType][rotate] >= 2 && map[(TOP - blockY) + shapesH[blockType][rotate]-3] == 8'b11111111) begin
-                for(i = 7; i >= 0; i = i-1)
-                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-3)
-                        if(i > 0)
+            else if(map[6] == 8'b11111111)
+                for(i = 6; i > 0; i = i-1)
+                    if(i > 0)
                             map[i] <= map[i-1];
                         else
                             map[i] <= 0;
-            end
-            else if(shapesH[blockType][rotate] >= 3 && map[(TOP - blockY) + shapesH[blockType][rotate]-4] == 8'b11111111) begin
-                for(i = 7; i >= 0; i = i-1)
-                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-4)
-                        if(i > 0)
+            else if(map[5] == 8'b11111111)
+                for(i = 5; i > 0; i = i-1)
+                    if(i > 0)
                             map[i] <= map[i-1];
                         else
                             map[i] <= 0;
-            end
-            else if(shapesH[blockType][rotate] >= 4 && map[(TOP - blockY) + shapesH[blockType][rotate]-5] == 8'b11111111) begin
-                for(i = 7; i >= 0; i = i-1)
-                    if(i <= (TOP - blockY) + shapesH[blockType][rotate]-5)
-                        if(i > 0)
+            else if(map[4] == 8'b11111111)
+                for(i = 4; i > 0; i = i-1)
+                    if(i > 0)
                             map[i] <= map[i-1];
                         else
                             map[i] <= 0;
-            end
+            else if(map[3] == 8'b11111111)
+                for(i = 3; i > 0; i = i-1)
+                    if(i > 0)
+                            map[i] <= map[i-1];
+                        else
+                            map[i] <= 0;
+            else if(map[2] == 8'b11111111)
+                for(i = 2; i > 0; i = i-1)
+                    if(i > 0)
+                            map[i] <= map[i-1];
+                        else
+                            map[i] <= 0;
+            else if(map[1] == 8'b11111111)
+                for(i = 1; i > 0; i = i-1)
+                    if(i > 0)
+                            map[i] <= map[i-1];
+                        else
+                            map[i] <= 0;
+            
+            
+            for(i = 7; i > 0; i = i-1)
+                if(i <= (TOP - blockY) + shapesH[blockType][rotate]-2);
             else nextScene <= 3;
             for (i = 0; i<8; i=i+1)
                 display[i] <= map[i];
@@ -317,9 +335,21 @@ module tetris(
 
     //  round
     always@(posedge timer2)
-    begin
-        nextBlockY <= blockY - 1;
-        scene <= nextScene;
+        nextRound <= ~round;
+    
+    always@(posedge refresh)
+    if(controller==4)begin
+        if(nextRound!=round)
+        begin
+            round <= nextRound;
+            nextBlockY <= blockY - 1;
+            scene <= nextScene;
+        end
+        else if(!downAction && downNext)
+        begin
+            nextBlockY <= blockY - 1;
+            scene <= nextScene;
+        end
     end
 
     // display
@@ -350,7 +380,6 @@ module tetris(
     else if(controller==13)
         COMM <= 4'b0000;
     
-        
 endmodule
 
 // 0.5s , 2hz
