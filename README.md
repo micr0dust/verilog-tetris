@@ -2,6 +2,8 @@
 
 A Tetris game made with Verilog.
 
+![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/thumbnails.jpg?raw=true "video")
+
 ## Basic Features
 
 - Basic operation like left, right, rotate, down
