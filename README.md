@@ -2,13 +2,13 @@
 
 A Tetris game developed using Verilog
 
-[![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/thumbnails.jpg?raw=true "video")](https://www.youtube.com/watch?v=JI98538qdTQ)
+[![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/thumbnails.jpg?raw=true "在 Youtube 上觀看")](https://www.youtube.com/watch?v=JI98538qdTQ)
 
 ## Display
 
 All result are display on 8x8 LED
 
-![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/LED8x8.jpg?raw=true "video")]
+![8x8 LED](https://github.com/micr0dust/verilog-tetris/blob/main/img/LED8x8.jpg?raw=true "8x8 LED")]
 
 ## Basic Features
 
