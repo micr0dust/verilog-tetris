@@ -1,6 +1,6 @@
 # Verilog Tetris
 
-A Tetris game developed using Verilog.
+A Tetris game developed using Verilog
 
 [![video](https://github.com/micr0dust/verilog-tetris/blob/main/img/thumbnails.jpg?raw=true "video")](https://www.youtube.com/watch?v=JI98538qdTQ)
 
