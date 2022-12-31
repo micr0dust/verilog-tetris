@@ -4,14 +4,26 @@ module tetris(
 	output reg [7:0] DATA_R, DATA_G, DATA_B ,
     output reg [3:0] COMM,
     output reg debugger,
-	input CLK, CLR, right, left, rotating, down
+	input CLK, CLR, SW, skip, right, left, rotating, down
 );
     // const
     reg [7:0] shapes[6:0][3:0][3:0];
     reg [2:0] shapesH[6:0][3:0];
+    reg [2:0] digits[9:0][4:0];
     parameter[4:0] TOP = 17, BUTTOM = 10;
 
 	initial begin
+        // digits
+        digits[0][0]<=3'b111;digits[0][1]<=3'b101;digits[0][2]<=3'b101;digits[0][3]<=3'b101;digits[0][4]<=3'b111;
+        digits[1][0]<=3'b001;digits[1][1]<=3'b001;digits[1][2]<=3'b001;digits[1][3]<=3'b001;digits[1][4]<=3'b001;
+        digits[2][0]<=3'b111;digits[2][1]<=3'b001;digits[2][2]<=3'b111;digits[2][3]<=3'b100;digits[2][4]<=3'b111;
+        digits[3][0]<=3'b111;digits[3][1]<=3'b001;digits[3][2]<=3'b111;digits[3][3]<=3'b001;digits[3][4]<=3'b111;
+        digits[4][0]<=3'b101;digits[4][1]<=3'b101;digits[4][2]<=3'b111;digits[4][3]<=3'b001;digits[4][4]<=3'b001;
+        digits[5][0]<=3'b111;digits[5][1]<=3'b100;digits[5][2]<=3'b111;digits[5][3]<=3'b001;digits[5][4]<=3'b111;
+        digits[6][0]<=3'b111;digits[6][1]<=3'b100;digits[6][2]<=3'b111;digits[6][3]<=3'b101;digits[6][4]<=3'b111;
+        digits[7][0]<=3'b111;digits[7][1]<=3'b001;digits[7][2]<=3'b001;digits[7][3]<=3'b001;digits[7][4]<=3'b001;
+        digits[8][0]<=3'b111;digits[8][1]<=3'b101;digits[8][2]<=3'b111;digits[8][3]<=3'b101;digits[8][4]<=3'b111;
+        digits[9][0]<=3'b111;digits[9][1]<=3'b101;digits[9][2]<=3'b111;digits[9][3]<=3'b001;digits[9][4]<=3'b001;
         // shapes define
         shapes[0][0][0]<=8'b11110000;shapes[0][0][1]<=8'b00000000;shapes[0][0][2]<=8'b00000000;shapes[0][0][3]<=8'b00000000;shapes[0][1][0]<=8'b10000000;shapes[0][1][1]<=8'b10000000;shapes[0][1][2]<=8'b10000000;shapes[0][1][3]<=8'b10000000;shapes[0][2][0]<=8'b11110000;shapes[0][2][1]<=8'b00000000;shapes[0][2][2]<=8'b00000000;shapes[0][2][3]<=8'b00000000;shapes[0][3][0]<=8'b10000000;shapes[0][3][1]<=8'b10000000;shapes[0][3][2]<=8'b10000000;shapes[0][3][3]<=8'b10000000;
         shapes[1][0][0]<=8'b11000000;shapes[1][0][1]<=8'b11000000;shapes[1][0][2]<=8'b00000000;shapes[1][0][3]<=8'b00000000;shapes[1][1][0]<=8'b11000000;shapes[1][1][1]<=8'b11000000;shapes[1][1][2]<=8'b00000000;shapes[1][1][3]<=8'b00000000;shapes[1][2][0]<=8'b11000000;shapes[1][2][1]<=8'b11000000;shapes[1][2][2]<=8'b00000000;shapes[1][2][3]<=8'b00000000;shapes[1][3][0]<=8'b11000000;shapes[1][3][1]<=8'b11000000;shapes[1][3][2]<=8'b00000000;shapes[1][3][3]<=8'b00000000;
@@ -43,6 +55,10 @@ module tetris(
         6: S
     */
 
+    // score
+    reg[6:0] score;
+    reg[6:0] lastScore;
+
     // controller
     reg[4:0] controller;
     reg nextRound;
@@ -53,11 +69,15 @@ module tetris(
     reg leftAction;
     reg rotateAction;
     reg downAction;
+    reg skipAction;
     reg rightNext;
     reg leftNext;
     reg rotateNext;
     reg downNext;
+    reg skipNext;
     reg [3:0] delay;
+    reg [8:0] delaySW;
+    reg skipThis;
 
     //random
     reg [7:0] random;
@@ -95,12 +115,15 @@ module tetris(
 
     initial 
         begin
+            skipThis <= 0;
+            score <= 0;
             round <= 0;
             nextRound <= 0;
             delay <= 0;
             rightNext <= 0;
             leftNext <= 0;
             rotateNext <= 0;
+            skipNext <= 0;
             downNext <= 0;
             debugger <= 0;
             COMM <= 4'b1000;
@@ -110,6 +133,7 @@ module tetris(
             rightAction <= 0;
             leftAction <= 0;
             rotateAction <= 0;
+            skipAction <= 0;
             controller <= 0;
             scene <= 0;
             random <= 0;
@@ -141,6 +165,7 @@ module tetris(
             leftNext <= left;
             rotateNext <= rotating;
             downNext <= down;
+            skipNext <= skip;
             delay <= delay + 1;
         end
         else delay <= delay + 1;
@@ -198,6 +223,28 @@ module tetris(
         nextScene <= 1;
     end
     else if(controller==3)
+    if((SW||delaySW) && scene >= 3)begin
+        if(SW) delaySW <= 1;
+        else if(delaySW) delaySW <= delaySW + 1;
+        
+        if(SW)
+        begin
+            for (i = 0; i<8; i=i+1)
+            if(i>=2 && i<=6)
+                display[i] <= {1'b0,digits[score/10][i-2],1'b0,digits[score-((score/10)*10)][i-2]};
+            else
+                display[i] <= 8'b0;
+        end
+        else begin
+            for (i = 0; i<8; i=i+1)
+                display[i] <= map[i];
+            display[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
+            display[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
+            display[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
+            display[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
+        end   
+    end
+    else
     case (scene)
         0: begin
             animeCount <= animeCount + 1;
@@ -217,6 +264,7 @@ module tetris(
             end
         end
         1: begin
+            score <= 0;
             if(rightAction||leftAction||rotateAction)
                 nextScene <= 3;
         end
@@ -226,8 +274,17 @@ module tetris(
             rotate <= random % 4;
             blockX <= random % 5;
             //nextBlockY <= (TOP + shapesH[1][random % 4]+1);
-            blockY <= (TOP + shapesH[random % 7][random % 4]+1);
+            blockY <= (TOP + shapesH[random % 7][random % 4]+1);          
             nextScene <= 4;
+            skipThis <= 0;
+            if(lastScore!=score)begin
+                lastScore <= score;
+                for (i = 0; i<8; i=i+1)
+                    if(i>=2 && i<=6)
+                        display[i] <= {1'b0,digits[score/10][i-2],1'b0,digits[score-((score/10)*10)][i-2]};
+                    else
+                        display[i] <= 8'b0;
+            end
         end
         4: begin // falling
             blockY <= nextBlockY;
@@ -253,81 +310,86 @@ module tetris(
             ((blockY - 4) <= TOP && (map[TOP - (blockY - 4)] & (shapes[blockType][rotate][3] >> blockX)))
             ))
             begin
-                map[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
-                map[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
-                map[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
-                map[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
+                if(!skipThis) begin
+                    map[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
+                    map[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
+                    map[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
+                    map[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
+                    if(blockY >= TOP)
+                        nextScene <= 0;
+                    else
+                        nextScene <= 5;
+                end
+                else begin
+                    nextScene <= 5;
+                end
+
                 for (i = 0; i<8; i=i+1)
                     display[i] <= map[i];
                 display[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
                 display[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
                 display[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
                 display[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
-                if(blockY >= TOP)
-                    nextScene <= 0;
-                else
-                    nextScene <= 5;
             end
             else
             begin
                 // erase
-                for (i = 0; i<8; i=i+1)
-                    display[i] <= map[i];
-                display[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
-                display[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
-                display[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
-                display[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
-                nextScene <= 4;
+                if(skipAction!=skipNext && score>0) begin
+                    score <= score - 1;
+                    skipThis <= 1;
+                end
+                else begin
+                    for (i = 0; i<8; i=i+1)
+                        display[i] <= map[i];
+                    display[TOP - (blockY - 0)] <= map[TOP - (blockY - 0)] | (shapes[blockType][rotate][0] >> blockX);
+                    display[TOP - (blockY - 1)] <= map[TOP - (blockY - 1)] | (shapes[blockType][rotate][1] >> blockX);
+                    display[TOP - (blockY - 2)] <= map[TOP - (blockY - 2)] | (shapes[blockType][rotate][2] >> blockX);
+                    display[TOP - (blockY - 3)] <= map[TOP - (blockY - 3)] | (shapes[blockType][rotate][3] >> blockX);
+                    nextScene <= 4;
+                end
             end
         end
         5: begin //check and erase
-            if(map[7] == 8'b11111111)
+            if(map[7] == 8'b11111111) begin
+                score <= score + 1;
                 for(i = 7; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[6] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[6] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 6; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[5] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[5] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 5; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[4] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[4] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 4; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[3] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[3] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 3; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[2] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[2] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 2; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            else if(map[1] == 8'b11111111)
+                    map[i] <= map[i-1];
+            end
+            else if(map[1] == 8'b11111111)begin
+                score <= score + 1;
                 for(i = 1; i > 0; i = i-1)
-                    if(i > 0)
-                            map[i] <= map[i-1];
-                        else
-                            map[i] <= 0;
-            
+                    map[i] <= map[i-1];
+            end
+            else nextScene <= 3;
             
             for(i = 7; i > 0; i = i-1)
                 if(i <= (TOP - blockY) + shapesH[blockType][rotate]-2);
-            else nextScene <= 3;
+            
             for (i = 0; i<8; i=i+1)
                 display[i] <= map[i];
         end
@@ -360,19 +422,20 @@ module tetris(
         leftAction <= leftNext;
         rotateAction <= rotateNext;
         downAction <= downNext;
+        skipAction <= skipNext;
         COMM <= 4'b1111;
     end
     else if(controller>=5 && controller<13)
     begin
         DATA_R <= {
-            ~display[7][controller-5],
-            ~display[6][controller-5],
-            ~display[5][controller-5],
-            ~display[4][controller-5],
-            ~display[3][controller-5],
-            ~display[2][controller-5],
-            ~display[1][controller-5],
-            ~display[0][controller-5],
+            ~display[7][12-controller],
+            ~display[6][12-controller],
+            ~display[5][12-controller],
+            ~display[4][12-controller],
+            ~display[3][12-controller],
+            ~display[2][12-controller],
+            ~display[1][12-controller],
+            ~display[0][12-controller],
         };
         COMM <= {COMM[3] ,COMM[2:0]+ 1'b1};
         debugger <= 1;
