@@ -33,16 +33,16 @@ All result are display on 8x8 LED
 
 | input/output  | PIN | I/O | comment |
 | --------------|-----|-----|---------|
-left | PIN_64 | 4 BITS SW | Left button
-right | PIN_67 | 4 BITS SW | Right button
-rotating | PIN_66 | 4 BITS SW | Rotate button
 CLK | PIN_22 | -- | clock (25 MHZ)
+left | PIN_64 | 4 BITS SW | Left button
 down | PIN_65 | 4 BITS SW | Down button
-CLR | PIN_133 | 8 DIPSW (ON=HI) | clear 8x8 LED
-SW | PIN_132 | 8 DIPSW (ON=HI) | pause and display score
-skip | PIN_129 | 8 DIPSW (ON=LOW) | spent 1 score to smash falling block
+rotating | PIN_66 | 4 BITS SW | Rotate button
+right | PIN_67 | 4 BITS SW | Right button
 loop | PIN_124 | 8 DIPSW (ON=LOW) | auto start game without button
 accumulate | PIN_128 | 8 DIPSW | won't reset score when end
+skip | PIN_129 | 8 DIPSW (ON=LOW) | spent 1 score to smash falling block
+SW | PIN_132 | 8 DIPSW (ON=HI) | pause and display score
+CLR | PIN_133 | 8 DIPSW (ON=HI) | clear 8x8 LED
 COMM[0] | PIN_68 | S0
 COMM[1] | PIN_69 | S1
 COMM[2] | PIN_70 | S2
