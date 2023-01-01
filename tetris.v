@@ -3,7 +3,7 @@
 module tetris(
 	output reg [7:0] DATA_R, DATA_G, DATA_B ,
     output reg [3:0] COMM,
-	input CLK, CLR, SW, skip, right, left, rotating, down, loop
+	input CLK, CLR, SW, skip, right, left, rotating, down, loop, accumulate
 );
     // const
     reg [7:0] shapes[6:0][3:0][3:0];
@@ -263,8 +263,9 @@ module tetris(
             end
         end
         1: begin
-            score <= 0;
-            if(rightAction||leftAction||rotateAction||downAction||loop)
+            if(accumulate)
+                score <= 0;
+            if(rightAction||leftAction||rotateAction||downAction||!loop)
                 nextScene <= 3;
         end
         3: begin
