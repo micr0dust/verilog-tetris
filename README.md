@@ -37,7 +37,6 @@ left | PIN_64 | 4 BITS SW | Left button
 right | PIN_67 | 4 BITS SW | Right button
 rotating | PIN_66 | 4 BITS SW | Rotate button
 CLK | PIN_22 | -- | clock (25 MHZ)
-debugger | PIN_124 | -- |for debug use
 down | PIN_65 | 4 BITS SW | Down button
 CLR | PIN_133 | 8 DIPSW (ON=HI) | clear 8x8 LED
 SW | PIN_132 | 8 DIPSW (ON=HI) | pause and display score
