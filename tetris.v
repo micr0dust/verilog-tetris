@@ -3,8 +3,7 @@
 module tetris(
 	output reg [7:0] DATA_R, DATA_G, DATA_B ,
     output reg [3:0] COMM,
-    output reg debugger,
-	input CLK, CLR, SW, skip, right, left, rotating, down
+	input CLK, CLR, SW, skip, right, left, rotating, down, loop
 );
     // const
     reg [7:0] shapes[6:0][3:0][3:0];
@@ -125,7 +124,6 @@ module tetris(
             rotateNext <= 0;
             skipNext <= 0;
             downNext <= 0;
-            debugger <= 0;
             COMM <= 4'b1000;
             DATA_R <= 8'b11111111;
             DATA_G <= 8'b11111111;
@@ -174,7 +172,8 @@ module tetris(
     // random
     always@(posedge refresh)
     begin
-        random <= random+1;
+        if(random >= 231) random <= 0;
+        random <= random+1+right+left+rotating+down;
     end
 
     // simulate next action
@@ -182,7 +181,7 @@ module tetris(
     if(controller==1)
     begin
         if(!rotateAction && rotateNext)
-            tryRotate <= (rotate+1)%4;
+            tryRotate <= (rotate+1) % 4;
         else
             tryRotate <= rotate;
 
@@ -265,16 +264,16 @@ module tetris(
         end
         1: begin
             score <= 0;
-            if(rightAction||leftAction||rotateAction)
+            if(rightAction||leftAction||rotateAction||downAction||loop)
                 nextScene <= 3;
         end
         3: begin
             blockType <= random % 7;
             //blockType <= 1;
             rotate <= random % 4;
-            blockX <= random % 5;
-            //nextBlockY <= (TOP + shapesH[1][random % 4]+1);
-            blockY <= (TOP + shapesH[random % 7][random % 4]+1);          
+            blockX <= random % (9-shapesH[random % 7][(random&1)+1]);
+            //nextBlockY <= (TOP + shapesH[1][random&1]+1); 
+            blockY <= (TOP + shapesH[random % 7][random&1]+1);          
             nextScene <= 4;
             skipThis <= 0;
             if(lastScore!=score)begin
@@ -438,14 +437,13 @@ module tetris(
             ~display[0][12-controller],
         };
         COMM <= {COMM[3] ,COMM[2:0]+ 1'b1};
-        debugger <= 1;
     end
     else if(controller==13)
         COMM <= 4'b0000;
     
 endmodule
 
-// 0.5s , 2hz
+// sec timer
 module Timer2(input CLK, output reg CLKout);
 	reg [24:0] timer=0;
 	always @(posedge CLK)
@@ -460,7 +458,7 @@ module Timer2(input CLK, output reg CLKout);
 	end
 endmodule
 
-// 0.04s, faster timer
+// faster timer
 module Timer25(input CLK, output reg CLKout);
 	reg [24:0] timer=0;
 	always @(posedge CLK)
