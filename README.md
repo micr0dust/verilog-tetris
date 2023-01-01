@@ -81,8 +81,6 @@ Revision Name | tetris
 Top-level Entity Name | tetris
 Family | Cyclone III
 Device | EP3C10E144C8
-Total logic elements | 1,398 / 10,320 ( 14 % )
-Total combinational functions | 1,367 / 10,320 ( 13 % )
-Dedicated logic registers | 295 / 10,320 ( 3 % )
+Total logic elements | 1,430 / 10,320 ( 14 % )
 Total registers | 295
-Total pins | 37 / 95 ( 39 % )
+Total pins | 38 / 95 ( 40 % )
